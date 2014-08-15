@@ -41,5 +41,12 @@
     "mocha": "*",
     "verb": "~0.2.6",
     "verb-tag-jscomments": "^0.2.0"
+  },
+  "dependencies": {
+    "assemble": "git://github.com/assemble/assemble#v0.6.0",
+    "handlebars": "^2.0.0-alpha.4",
+    "lodash": "^2.4.1",
+    "remarked": "^0.1.4",
+    "through2": "^0.6.1"
   }
 }
