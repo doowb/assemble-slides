@@ -14,10 +14,8 @@ module.exports = {
     var content = null;
     if (!_.isEmpty(item.slides)) {
       var ctx = _.extend({}, this, {slides: item.slides});
-      console.log('ctx', ctx);
       content = handlebars.compile(tmpl)(ctx);
     }
-    console.log('content');
     var data = handlebars.createFrame({content: new handlebars.SafeString([item.slide.contents.toString(), content].join('\n'))})
     return marked(options.fn(this, {data: data}));
   }

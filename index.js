@@ -8,9 +8,13 @@
 'use strict';
 
 var path = require('path');
+var mkdirp = require('mkdirp');
 var assemble = require('assemble');
-var through = require('through2');
 var _ = require('lodash');
+var argv = require('minimist')(process.argv.slice(2));
+var fs = require('fs');
+
+var slides = require('./lib/slides');
 
 var base = path.resolve('src/templates/slides');
 var relative = path.relative.bind(path, base);
@@ -36,37 +40,19 @@ assemble.slides(localSlides, {
 
 assemble.task('slides', function () {
   assemble.src(__dirname + '/src/templates/pages/index.hbs')
-    .pipe(through.obj(function (file, encoding, callback) {
-      // add the slides to the context for the page
-      var slides = assemble.get('slides');
-      var keys = _.keys(slides);
-      keys.sort(function (a, b) {
-        var aLen = a.split('-').length;
-        var bLen = b.split('-').length;
-        var aData = assemble.get('slides.' + a).data;
-        var bData = assemble.get('slides.' + b).data;
-        var aOrder = aLen + '-' + (aData && aData.order || 0) + '-' + a;
-        var bOrder = bLen + '-' + (bData && bData.order || 0) + '-' + b;
-        return aOrder > bOrder;
-      });
-      console.log('keys', keys);
-
-      var tree = {
-        slides: {}
-      };
-      var key = null;
-      while(key = keys.shift()) {
-        var parts = key.split('-');
-        var part = null;
-        var node = tree;
-        while (part = parts.shift()) {
-          node = node.slides[part] || (node.slides[part] = {slides: {}, slide: assemble.get('slides.' + key)});
-        }
-      }
-      console.log('tree', require('util').inspect(tree, null, 10));
-      file.data.slides = tree.slides;
-      this.push(file);
-      callback();
-    }))
+    .pipe(slides(assemble))
     .pipe(assemble.dest('_gh_pages'));
+});
+
+assemble.task('slides:new', function () {
+  var slide = argv.slide;
+  if (!slide) {
+    throw new Error('Use --slide to specify a the name of the new slide');
+  }
+  var filepath = path.join(base, slide + '.md');
+  var dirs = path.dirname(path.relative(base, filepath));
+  if (dirs !== '.') {
+    mkdirp.sync(path.join(base, dirs));
+  }
+  fs.writeFileSync(filepath, '### ' + slide);
 });
